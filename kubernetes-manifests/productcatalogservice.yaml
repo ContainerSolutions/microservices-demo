@@ -37,9 +37,31 @@ spec:
         livenessProbe:
           exec:
             command: ["/bin/grpc_health_probe", "-addr=:3550"]
-#        env:
+        env:
 #          - name: JAEGER_SERVICE_ADDR
 #            value: "jaeger-collector:14268"
+           - name: DB_HOST
+             valueFrom:
+               secretKeyRef:
+                 name: mysql01-binding
+                 key: host
+           - name: DB_PORT
+             value: "3306"
+           - name: DB_USER
+             valueFrom:
+               secretKeyRef:
+                 name: mysql01-binding
+                 key: Username
+           - name: DB_PASS
+             valueFrom:
+               secretKeyRef:
+                 name: mysql01-binding
+                 key: Password
+           - name: DB_NAME
+             valueFrom:
+               secretKeyRef:
+                 name: mysql01-binding
+                 key: database_name
         resources:
           requests:
             cpu: 100m
@@ -60,3 +82,25 @@ spec:
   - name: grpc
     port: 3550
     targetPort: 3550
+---
+apiVersion: servicecatalog.k8s.io/v1beta1
+kind: ServiceBinding
+metadata:
+  name: mysql01-binding
+spec:
+  instanceRef:
+    name: mysql01
+---
+apiVersion: servicecatalog.k8s.io/v1beta1
+kind: ServiceInstance
+metadata:
+  name: mysql01
+spec:
+  clusterServiceClassExternalName: google-cloudsql-mysql
+  clusterServicePlanExternalName: mysql-db-f1-micro
+  parameters:
+    # don't do this in production, 'mkey?
+    authorized_networks: '0.0.0.0/0'
+    # the following parameter is not supported
+    # require_ssl: false
+    # workaround: gcloud sql instances patch myinstance --no-require-ssl
