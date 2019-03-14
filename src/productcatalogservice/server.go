@@ -141,6 +141,7 @@ func initDatabase() {
 			return
 		}
 	}
+
 	db, err = NewDatabase(vars["DB_USER"], vars["DB_PASS"], vars["DB_HOST"], vars["DB_PORT"], vars["DB_NAME"])
 	if err != nil {
 		log.Fatalf("Database initialization failed: %v", err)
@@ -256,6 +257,20 @@ func readCatalogFile(catalog *pb.ListProductsResponse) error {
 	return nil
 }
 
+func readCatalogDb() []*pb.Product {
+	catalogMutex.Lock()
+	defer catalogMutex.Unlock()
+	var err error
+	products := []*pb.Product{}
+	if db != nil {
+		products, err = db.Read()
+		if err != nil {
+			log.Warnf("error reading products from database: %v", err)
+		}
+	}
+	return products
+}
+
 func parseCatalog() []*pb.Product {
 	if reloadCatalog || len(cat.Products) == 0 {
 		err := readCatalogFile(&cat)
@@ -266,11 +281,7 @@ func parseCatalog() []*pb.Product {
 
 	// read products from the database if enabled
 	if db != nil {
-		products, err := db.Read()
-		if err != nil {
-			return []*pb.Product{}
-		}
-		return products
+		return readCatalogDb()
 	}
 
 	return cat.Products

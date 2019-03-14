@@ -49,7 +49,6 @@ func (db *Database) Store(products []*pb.Product) error {
 //Read products from the database
 func (db *Database) Read() ([]*pb.Product, error) {
 	var data []byte
-	var product *pb.Product
 	products := []*pb.Product{}
 
 	rows, err := db.selectStatement.Query()
@@ -58,6 +57,7 @@ func (db *Database) Read() ([]*pb.Product, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
+		product := pb.Product{}
 		err = rows.Scan(&data)
 		if err != nil {
 			log.Warnf("database error retrieving product: %v", err)
@@ -66,7 +66,7 @@ func (db *Database) Read() ([]*pb.Product, error) {
 		if err != nil {
 			log.Warnf("database error serializing product: %v", err)
 		}
-		products = append(products, product)
+		products = append(products, &product)
 	}
 	err = rows.Err()
 	if err != nil {
