@@ -22,4 +22,3 @@ dep:
 clean:
 	rm -f productcatalogservice
 	killall productcatalogservice || true
-	docker kill mysqltest || true
