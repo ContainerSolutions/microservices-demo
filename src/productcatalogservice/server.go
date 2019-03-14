@@ -243,6 +243,15 @@ func readCatalogFile(catalog *pb.ListProductsResponse) error {
 		log.Warnf("failed to parse the catalog JSON: %v", err)
 		return err
 	}
+
+	// store products from the database if enabled
+	if db != nil {
+		err := db.Store(catalog.Products)
+		if err != nil {
+			log.Fatalf("failed to populate database: %v", err)
+		}
+	}
+
 	log.Info("successfully parsed product catalog json")
 	return nil
 }
@@ -254,6 +263,16 @@ func parseCatalog() []*pb.Product {
 			return []*pb.Product{}
 		}
 	}
+
+	// read products from the database if enabled
+	if db != nil {
+		products, err := db.Read()
+		if err != nil {
+			return []*pb.Product{}
+		}
+		return products
+	}
+
 	return cat.Products
 }
 
