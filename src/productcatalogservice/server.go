@@ -53,6 +53,8 @@ var (
 	port = flag.Int("port", 3550, "port to listen at")
 
 	reloadCatalog bool
+
+	db *Database
 )
 
 func init() {
@@ -66,6 +68,7 @@ func init() {
 		TimestampFormat: time.RFC3339Nano,
 	}
 	log.Out = os.Stdout
+	initDatabase()
 	catalogMutex = &sync.Mutex{}
 	err := readCatalogFile(&cat)
 	if err != nil {
@@ -108,6 +111,11 @@ func main() {
 
 	log.Infof("starting grpc server at :%d", *port)
 	run(*port)
+
+	if db != nil {
+		defer db.Close()
+	}
+
 	select {}
 }
 
@@ -122,6 +130,22 @@ func run(port int) string {
 	healthpb.RegisterHealthServer(srv, svc)
 	go srv.Serve(l)
 	return l.Addr().String()
+}
+
+func initDatabase() {
+	var err error
+	vars := map[string]string{"DB_USER": "", "DB_PASS": "", "DB_HOST": "", "DB_PORT": "", "DB_NAME": ""}
+	for v := range vars {
+		if vars[v] = os.Getenv(v); vars[v] == "" {
+			log.Infof("Database initialization disabled: %v undefined.", v)
+			return
+		}
+	}
+	db, err = NewDatabase(vars["DB_USER"], vars["DB_PASS"], vars["DB_HOST"], vars["DB_PORT"], vars["DB_NAME"])
+	if err != nil {
+		log.Fatalf("Database initialization failed: %v", err)
+	}
+	log.Info("Database initialization completed.")
 }
 
 func initJaegerTracing() {
