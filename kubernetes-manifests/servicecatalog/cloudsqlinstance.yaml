@@ -1,0 +1,13 @@
+apiVersion: servicecatalog.k8s.io/v1beta1
+kind: ServiceInstance
+metadata:
+  name: mysql01
+spec:
+  clusterServiceClassExternalName: google-cloudsql-mysql
+  clusterServicePlanExternalName: mysql-db-f1-micro
+  parameters:
+    # don't do this in production, 'mkey?
+    authorized_networks: '0.0.0.0/0'
+    # the following parameter is not supported
+    # require_ssl: false
+    # workaround: gcloud sql instances patch myinstance --no-require-ssl
