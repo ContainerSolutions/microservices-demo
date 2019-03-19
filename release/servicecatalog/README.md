@@ -31,7 +31,7 @@ Get the helm chart:
 ```shell
 git clone git@github.com:GoogleCloudPlatform/gcp-service-broker.git
 cd gcp-service-broker
-git checkout feature/helm
+git checkout develop
 ```
 
 Create a Service Account for the Service Broker as shown [here](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/installation.md#create-a-root-service-account).
